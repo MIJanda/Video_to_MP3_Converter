@@ -17,7 +17,7 @@ server.config["MYSQL_PORT"] = os.environ.get("MYSQL_PORT")
 
 @server.route("/login", methods=["POST"])
 def login():
-    # basic authentication header to extract user credentials
+    # basic authentication header to extract user credentials, i.e. username and password
     auth = request.authorization
     if not auth:
         return "Missing Credentials", 401
@@ -36,6 +36,7 @@ def login():
         if auth.username != email or auth.password != password:
             return "Invalid Credentials", 401
         else:
+            # return a JWT to be used by the user to make requests to the API
             return create_JWT(auth.username, os.environ.get("JWT_SECRET"), True)
     else:
         return "Invalid Credentials", 401
@@ -55,3 +56,8 @@ def create_JWT(username, secret, is_admin):
         secret,
         algorithm="HS256",
     )
+
+
+if __name__ == "__main__":
+    # listen to requests on all public IPs
+    server.run(host="0.0.0.0", port=5000)
