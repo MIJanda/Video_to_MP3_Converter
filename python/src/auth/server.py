@@ -20,7 +20,7 @@ def login():
     # basic authentication header to extract user credentials, i.e. username and password
     auth = request.authorization
     if not auth:
-        return "Missing Credentials", 401
+        return "Missing Credentials!", 401
 
     # check db for username and password
     cur = mysql.connection.cursor()
@@ -39,7 +39,28 @@ def login():
             # return a JWT to be used by the user to make requests to the API
             return create_JWT(auth.username, os.environ.get("JWT_SECRET"), True)
     else:
-        return "Invalid Credentials", 401
+        return "Invalid Credentials!", 401
+
+
+@server.route("/validate", methods=["POST"])
+def validate():
+    encoded_jwt = request.headers["Authorization"]
+
+    if not encoded_jwt:
+        return "Missing Credentials!", 401
+
+    # NB. in prod. check for the authentication scheme type: encoded_jwt.split(" ")[0]
+    # extract the token
+    encoded_token = encoded_jwt.split(" ")[1]
+
+    try:
+        decoded_token = jwt.decode(
+            encoded_token, os.environ.get("JWT_SECRET"), algorithm=["HS256"]
+        )
+    except:
+        return "Not Authorized!", 403
+
+    return decoded_token, 200
 
 
 def create_JWT(username, secret, is_admin):
