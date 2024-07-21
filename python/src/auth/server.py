@@ -36,6 +36,22 @@ def login():
         if auth.username != email or auth.password != password:
             return "Invalid Credentials", 401
         else:
-            return createJWT(auth.username, os.environ.get("JWT_SECRET"), True)
+            return create_JWT(auth.username, os.environ.get("JWT_SECRET"), True)
     else:
         return "Invalid Credentials", 401
+
+
+def create_JWT(username, secret, is_admin):
+    now = datetime.datetime.utcnow()
+    # JWT expires after 1 day
+    expiry = now + datetime.timedelta(days=1)
+    return jwt.encode(
+        {
+            "username": username,
+            "exp": expiry,
+            "iat": now,  # issued at
+            "admin": is_admin,
+        },
+        secret,
+        algorithm="HS256",
+    )
